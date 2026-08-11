@@ -1,490 +1,221 @@
-let latitude = null;
+const state = {
+    latitude: null,
+    longitude: null,
+    locationName: null,
+    locationReady: false
+};
 
-let longitude = null;
+const salesForm = document.getElementById("salesForm");
+const submitButton = document.getElementById("submitButton");
+const locationStatus = document.getElementById("locationStatus");
+const locationName = document.getElementById("locationName");
+const coordinates = document.getElementById("coordinates");
+const alertBox = document.getElementById("alertBox");
 
-let locationName = null;
+function showAlert(message, type = "danger") {
+    alertBox.className = `alert alert-${type}`;
+    alertBox.textContent = message;
+    alertBox.classList.remove("d-none");
+}
 
+function hideAlert() {
+    alertBox.classList.add("d-none");
+}
 
-window.addEventListener(
-    "load",
-    function () {
+function setLocationStatus(statusText) {
+    locationStatus.textContent = statusText;
+}
 
-        captureLocation();
+function updateLocationDisplay() {
+    if (state.locationReady) {
+        locationName.textContent =
+            state.locationName || "Location detected";
 
-        loadRecords();
+        coordinates.textContent =
+            `Latitude: ${state.latitude.toFixed(6)} | ` +
+            `Longitude: ${state.longitude.toFixed(6)}`;
 
+        setLocationStatus("Location ready");
     }
-);
+}
 
+function handleLocationError(error) {
+    console.error("Geolocation error:", error);
 
-// =====================================================
-// LOCATION
-// =====================================================
+    state.locationReady = false;
 
-function captureLocation() {
+    let message = "Unable to access device location.";
 
-    showLocationMessage(
-        "📍 Requesting your location...",
-        "info"
-    );
+    if (error.code === 1) {
+        message =
+            "Location permission was denied. Please allow location access " +
+            "and reload the app.";
+    } else if (error.code === 2) {
+        message =
+            "Your location could not be determined. Please check GPS/location services.";
+    } else if (error.code === 3) {
+        message = "Location request timed out. Please try again.";
+    }
 
+    locationName.textContent = message;
+    coordinates.textContent = "Latitude/Longitude: unavailable";
+    setLocationStatus("Location unavailable");
 
-    if (!navigator.geolocation) {
+    showAlert(message, "warning");
+}
 
-        showLocationMessage(
-            "Location is not supported.",
-            "danger"
+async function reverseGeocode(latitude, longitude) {
+    try {
+        const response = await fetch(
+            `/reverse-geocode?lat=${encodeURIComponent(latitude)}` +
+            `&lon=${encodeURIComponent(longitude)}`
         );
 
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || "Reverse geocoding failed"
+            );
+        }
+
+        state.locationName =
+            data.location_name || "Location detected";
+
+    } catch (error) {
+        console.error("Reverse geocoding error:", error);
+        state.locationName = "Location detected";
+    }
+
+    state.locationReady = true;
+    updateLocationDisplay();
+}
+
+function getCurrentLocation() {
+    if (!navigator.geolocation) {
+        const message =
+            "Geolocation is not supported by this browser/device.";
+
+        locationName.textContent = message;
+        setLocationStatus("Not supported");
+        showAlert(message, "danger");
         return;
     }
 
+    setLocationStatus("Detecting...");
+    locationName.textContent = "Requesting device location...";
+    coordinates.textContent = "Latitude/Longitude: detecting...";
 
     navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            state.latitude = position.coords.latitude;
+            state.longitude = position.coords.longitude;
 
-        async function (position) {
+            coordinates.textContent =
+                `Latitude: ${state.latitude.toFixed(6)} | ` +
+                `Longitude: ${state.longitude.toFixed(6)}`;
 
-            latitude =
-                position.coords.latitude;
+            locationName.textContent = "Finding location name...";
 
-            longitude =
-                position.coords.longitude;
-
-
-            console.log(
-                latitude,
-                longitude
+            await reverseGeocode(
+                state.latitude,
+                state.longitude
             );
-
-
-            await reverseGeocode();
-
         },
-
-
-        function (error) {
-
-            console.log(error);
-
-
-            showLocationMessage(
-
-                "❌ Location permission is required " +
-                "for this POC.",
-
-                "danger"
-
-            );
-
-        },
-
-
+        handleLocationError,
         {
-
-            enableHighAccuracy:
-                true,
-
-            timeout:
-                15000,
-
-            maximumAge:
-                0
-
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 60000
         }
-
     );
-
 }
-
-
-// =====================================================
-// REVERSE GEOCODING
-// =====================================================
-
-async function reverseGeocode() {
-
-    try {
-
-        const response =
-            await fetch(
-
-                `/reverse-geocode` +
-                `?lat=${latitude}` +
-                `&lon=${longitude}`
-
-            );
-
-
-        const data =
-            await response.json();
-
-
-        locationName =
-            data.location_name;
-
-
-        document.getElementById(
-            "locationDisplay"
-        ).innerHTML =
-
-            `📍 ${locationName}`;
-
-
-        showLocationMessage(
-
-            `✅ Location captured: ${locationName}`,
-
-            "success"
-
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-
-        locationName =
-            "Location detected";
-
-
-        showLocationMessage(
-
-            "⚠️ Coordinates captured, " +
-            "but location name unavailable.",
-
-            "warning"
-
-        );
-
-    }
-
-}
-
-
-// =====================================================
-// FORM SUBMISSION
-// =====================================================
-
-document
-    .getElementById("salesForm")
-    .addEventListener(
-
-        "submit",
-
-        async function (event) {
-
-            event.preventDefault();
-
-
-            if (
-                latitude === null ||
-                longitude === null
-            ) {
-
-                showMessage(
-
-                    "Please allow location access first.",
-
-                    "warning"
-
-                );
-
-                return;
-
-            }
-
-
-            const data = {
-
-                customer_name:
-                    getValue("customer_name"),
-
-                country:
-                    getValue("country"),
-
-                region:
-                    getValue("region"),
-
-                product:
-                    getValue("product"),
-
-                category:
-                    getValue("category"),
-
-                quantity:
-                    Number(
-                        getValue("quantity")
-                    ),
-
-                sales:
-                    Number(
-                        getValue("sales")
-                    ),
-
-                profit:
-                    Number(
-                        getValue("profit")
-                    ),
-
-                discount:
-                    Number(
-                        getValue("discount")
-                    ),
-
-                shipping_cost:
-                    Number(
-                        getValue("shipping_cost")
-                    ),
-
-
-                latitude:
-                    latitude,
-
-                longitude:
-                    longitude,
-
-                location_name:
-                    locationName
-
-            };
-
-
-            try {
-
-                const response =
-                    await fetch(
-
-                        "/submit",
-
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify(data)
-
-                        }
-
-                    );
-
-
-                const result =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        result.message
-                    );
-
-                }
-
-
-                showMessage(
-
-                    "✅ Sales record saved successfully!",
-
-                    "success"
-
-                );
-
-
-                document
-                    .getElementById(
-                        "salesForm"
-                    )
-                    .reset();
-
-
-                loadRecords();
-
-            }
-
-            catch (error) {
-
-                showMessage(
-
-                    "❌ " +
-                    error.message,
-
-                    "danger"
-
-                );
-
-            }
-
-        }
-
-    );
-
-
-// =====================================================
-// GET RECORDS
-// =====================================================
-
-async function loadRecords() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/entries"
-            );
-
-
-        const records =
-            await response.json();
-
-
-        const container =
-            document.getElementById(
-                "records"
-            );
-
-
-        container.innerHTML = "";
-
-
-        records.forEach(
-
-            function (record) {
-
-                const div =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                div.className =
-                    "record";
-
-
-                div.innerHTML = `
-
-                    <strong>
-                        ${record.customer_name}
-                    </strong>
-
-                    <div>
-                        ${record.product}
-                    </div>
-
-                    <div>
-                        Sales:
-                        ₹${record.sales.toLocaleString()}
-                    </div>
-
-                    <div>
-                        Profit:
-                        ₹${record.profit.toLocaleString()}
-                    </div>
-
-                    <small>
-                        📍 ${record.location_name}
-                    </small>
-
-                `;
-
-
-                container.appendChild(
-                    div
-                );
-
-            }
-
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-    }
-
-}
-
-
-// =====================================================
-// REFRESH EVERY 2 SECONDS
-// =====================================================
-
-setInterval(
-
-    loadRecords,
-
-    2000
-
-);
-
-
-// =====================================================
-// HELPERS
-// =====================================================
 
 function getValue(id) {
-
-    return document
-        .getElementById(id)
-        .value;
-
+    return document.getElementById(id).value.trim();
 }
 
+salesForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    hideAlert();
 
-function showMessage(
-    text,
-    type
-) {
+    if (!salesForm.checkValidity()) {
+        salesForm.classList.add("was-validated");
+        showAlert(
+            "Please complete all required fields.",
+            "warning"
+        );
+        return;
+    }
 
-    document
-        .getElementById(
-            "message"
-        )
-        .innerHTML = `
+    if (!state.locationReady) {
+        showAlert(
+            "Location is not ready. Please allow location access and wait for the location to appear.",
+            "warning"
+        );
+        return;
+    }
 
-            <div
-                class="alert
-                       alert-${type}">
+    const payload = {
+        customer_name: getValue("customer_name"),
+        country: getValue("country"),
+        region: getValue("region"),
+        product: getValue("product"),
+        category: getValue("category"),
+        quantity: Number(getValue("quantity")),
+        sales: Number(getValue("sales")),
+        profit: Number(getValue("profit")),
+        discount: Number(getValue("discount")),
+        shipping_cost: Number(getValue("shipping_cost")),
+        latitude: state.latitude,
+        longitude: state.longitude,
+        location_name: state.locationName
+    };
 
-                ${text}
+    submitButton.disabled = true;
+    submitButton.textContent = "Saving...";
 
-            </div>
+    try {
+        const response = await fetch("/submit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-        `;
+        const result = await response.json();
 
-}
+        if (!response.ok) {
+            throw new Error(
+                result.error || "Failed to save sales data."
+            );
+        }
 
+        showAlert(
+            "Sales data saved successfully!",
+            "success"
+        );
 
-function showLocationMessage(
-    text,
-    type
-) {
+        salesForm.reset();
+        salesForm.classList.remove("was-validated");
 
-    document
-        .getElementById(
-            "locationMessage"
-        )
-        .innerHTML = `
+        // Keep the current device location for the next entry.
+        updateLocationDisplay();
 
-            <div
-                class="alert
-                       alert-${type}">
+    } catch (error) {
+        console.error("Submit error:", error);
 
-                ${text}
+        showAlert(
+            error.message || "Unable to save sales data.",
+            "danger"
+        );
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit Sales Data";
+    }
+});
 
-            </div>
-
-        `;
-
-}
+window.addEventListener("load", () => {
+    getCurrentLocation();
+});
