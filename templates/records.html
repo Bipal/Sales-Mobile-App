@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Sales Records - Mobile POC</title>
+    <title>Sales Records</title>
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -20,37 +20,25 @@
     <style>
 
         body {
-            background-color: #f5f7fa;
+            background-color: #f5f7fb;
         }
 
-        .page-header {
+        .app-header {
             background: #0d6efd;
             color: white;
-            padding: 20px;
-            border-radius: 10px;
         }
 
-        .records-card {
+        .record-card {
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
         }
 
-        .table-container {
-            overflow-x: auto;
+        .record-value {
+            font-weight: 600;
         }
 
-        .location-cell {
-            min-width: 220px;
-        }
-
-        .coordinates {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .empty-message {
-            padding: 40px;
-            text-align: center;
+        .location {
+            color: #198754;
         }
 
     </style>
@@ -59,426 +47,498 @@
 
 <body>
 
-<div class="container-fluid px-3 px-md-5 py-4">
-
     <!-- HEADER -->
 
-    <div class="page-header mb-4">
+    <header class="app-header shadow-sm">
 
-        <div
-            class="d-flex justify-content-between align-items-center flex-wrap"
-        >
+        <div class="container py-3">
+
+            <h1 class="h4 mb-1">
+                Sales Records
+            </h1>
+
+            <div class="small opacity-75">
+                Records stored in PostgreSQL
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <main class="container py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
 
             <div>
 
-                <h2 class="mb-1">
-                    Sales Records
+                <h2 class="h5 mb-1">
+                    Saved Sales
                 </h2>
 
-                <p class="mb-0">
-                    Mobile Sales POC - Database Records
-                </p>
+                <div
+                    id="recordCount"
+                    class="text-muted small"
+                >
+                    Loading records...
+                </div>
 
             </div>
 
+            <button
+                class="btn btn-outline-primary btn-sm"
+                onclick="loadRecords()"
+            >
+                ↻ Refresh
+            </button>
+
+        </div>
+
+
+        <!-- LOADING -->
+
+        <div
+            id="loading"
+            class="text-center py-5"
+        >
+
+            <div
+                class="spinner-border text-primary"
+                role="status"
+            ></div>
+
+            <div class="mt-2">
+                Loading records...
+            </div>
+
+        </div>
+
+
+        <!-- RECORDS -->
+
+        <div
+            id="recordsContainer"
+            class="d-grid gap-3"
+        ></div>
+
+
+        <!-- EMPTY -->
+
+        <div
+            id="emptyMessage"
+            class="alert alert-info d-none"
+        >
+            No sales records found.
+        </div>
+
+
+        <!-- ERROR -->
+
+        <div
+            id="errorMessage"
+            class="alert alert-danger d-none"
+        ></div>
+
+
+        <!-- NAVIGATION -->
+
+        <div class="d-grid gap-2 mt-4">
+
             <a
                 href="/"
-                class="btn btn-light mt-2 mt-md-0"
+                class="btn btn-primary"
             >
-                ← Back to Sales Form
+                ← Back to Sales Entry
+            </a>
+
+            <a
+                href="/dashboard"
+                class="btn btn-success"
+            >
+                📊 View Dashboard
             </a>
 
         </div>
 
-    </div>
+    </main>
 
 
-    <!-- SUMMARY -->
+    <script>
 
-    <div class="row mb-4">
+        // ====================================================
+        // LOAD RECORDS
+        // ====================================================
 
-        <div class="col-md-4">
+        async function loadRecords() {
 
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">
-                        Total Records
-                    </h6>
-
-                    <h2 id="recordCount">
-                        -
-                    </h2>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- RECORDS -->
-
-    <div class="card shadow-sm records-card">
-
-        <div class="card-body">
-
-            <div
-                class="d-flex justify-content-between align-items-center mb-3"
-            >
-
-                <h5 class="mb-0">
-                    Sales Entries
-                </h5>
-
-                <button
-                    id="refreshButton"
-                    class="btn btn-primary"
-                >
-                    Refresh
-                </button>
-
-            </div>
-
-
-            <div id="loadingMessage">
-
-                <div class="text-center py-4">
-
-                    <div
-                        class="spinner-border text-primary"
-                        role="status"
-                    ></div>
-
-                    <p class="mt-2">
-                        Loading records...
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="errorMessage"
-                class="alert alert-danger d-none"
-            ></div>
-
-
-            <div
-                id="emptyMessage"
-                class="empty-message d-none"
-            >
-
-                <h5>
-                    No records found
-                </h5>
-
-                <p class="text-muted">
-                    Submit a sales record from the mobile form first.
-                </p>
-
-            </div>
-
-
-            <div
-                id="tableContainer"
-                class="table-container d-none"
-            >
-
-                <table
-                    class="table table-striped table-hover align-middle"
-                >
-
-                    <thead class="table-dark">
-
-                        <tr>
-
-                            <th>ID</th>
-
-                            <th>Created</th>
-
-                            <th>Customer</th>
-
-                            <th>Country</th>
-
-                            <th>Region</th>
-
-                            <th>Product</th>
-
-                            <th>Category</th>
-
-                            <th>Quantity</th>
-
-                            <th>Sales</th>
-
-                            <th>Profit</th>
-
-                            <th>Discount</th>
-
-                            <th>Shipping Cost</th>
-
-                            <th class="location-cell">
-                                Location
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="recordsTableBody"></tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<script>
-
-    const loadingMessage =
-        document.getElementById("loadingMessage");
-
-    const errorMessage =
-        document.getElementById("errorMessage");
-
-    const emptyMessage =
-        document.getElementById("emptyMessage");
-
-    const tableContainer =
-        document.getElementById("tableContainer");
-
-    const recordsTableBody =
-        document.getElementById("recordsTableBody");
-
-    const recordCount =
-        document.getElementById("recordCount");
-
-    const refreshButton =
-        document.getElementById("refreshButton");
-
-
-    async function loadRecords() {
-
-        loadingMessage.classList.remove("d-none");
-
-        errorMessage.classList.add("d-none");
-
-        emptyMessage.classList.add("d-none");
-
-        tableContainer.classList.add("d-none");
-
-
-        try {
-
-            const response =
-                await fetch("/entries");
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.error ||
-                    "Unable to load records."
+            const container =
+                document.getElementById(
+                    "recordsContainer"
                 );
 
-            }
+            const loading =
+                document.getElementById(
+                    "loading"
+                );
+
+            const emptyMessage =
+                document.getElementById(
+                    "emptyMessage"
+                );
+
+            const errorMessage =
+                document.getElementById(
+                    "errorMessage"
+                );
+
+            const recordCount =
+                document.getElementById(
+                    "recordCount"
+                );
 
 
-            recordCount.textContent =
-                data.count;
+            container.innerHTML = "";
+
+            emptyMessage.classList.add(
+                "d-none"
+            );
+
+            errorMessage.classList.add(
+                "d-none"
+            );
+
+            loading.classList.remove(
+                "d-none"
+            );
 
 
-            recordsTableBody.innerHTML = "";
+            try {
+
+                const response =
+                    await fetch(
+                        "/entries"
+                    );
 
 
-            if (
-                !data.entries ||
-                data.entries.length === 0
-            ) {
+                const data =
+                    await response.json();
 
-                emptyMessage.classList.remove(
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Unable to retrieve records."
+                    );
+
+                }
+
+
+                loading.classList.add(
                     "d-none"
                 );
 
-                return;
 
-            }
-
-
-            data.entries.forEach(
-                (record) => {
-
-                    const row =
-                        document.createElement("tr");
+                recordCount.textContent =
+                    `${data.count} record(s)`;
 
 
-                    row.innerHTML = `
+                if (
+                    !data.entries ||
+                    data.entries.length === 0
+                ) {
 
-                        <td>
-                            ${record.id ?? ""}
-                        </td>
+                    emptyMessage.classList.remove(
+                        "d-none"
+                    );
 
-                        <td>
-                            ${
-                                record.created_at
-                                ? new Date(
-                                    record.created_at
-                                ).toLocaleString()
-                                : ""
-                            }
-                        </td>
+                    return;
 
-                        <td>
-                            ${record.customer_name ?? ""}
-                        </td>
+                }
 
-                        <td>
-                            ${record.country ?? ""}
-                        </td>
 
-                        <td>
-                            ${record.region ?? ""}
-                        </td>
+                data.entries.forEach(
+                    (record) => {
 
-                        <td>
-                            ${record.product ?? ""}
-                        </td>
+                        const card =
+                            document.createElement(
+                                "div"
+                            );
 
-                        <td>
-                            ${record.category ?? ""}
-                        </td>
 
-                        <td>
-                            ${record.quantity ?? ""}
-                        </td>
+                        card.className =
+                            "card shadow-sm record-card";
 
-                        <td>
-                            ₹${Number(
-                                record.sales || 0
-                            ).toLocaleString("en-IN")}
-                        </td>
 
-                        <td>
-                            ₹${Number(
-                                record.profit || 0
-                            ).toLocaleString("en-IN")}
-                        </td>
+                        card.innerHTML = `
 
-                        <td>
-                            ${record.discount ?? 0}%
-                        </td>
+                            <div class="card-body">
 
-                        <td>
-                            ₹${Number(
-                                record.shipping_cost || 0
-                            ).toLocaleString("en-IN")}
-                        </td>
+                                <div class="d-flex justify-content-between align-items-start mb-3">
 
-                        <td class="location-cell">
+                                    <div>
 
-                            <strong>
-                                ${
-                                    record.location_name ||
-                                    "Unavailable"
-                                }
-                            </strong>
+                                        <h5 class="mb-1">
+                                            ${escapeHtml(record.customer_name)}
+                                        </h5>
 
-                            <div class="coordinates">
+                                        <div class="text-muted">
+                                            ${escapeHtml(record.product)}
+                                        </div>
 
-                                ${
-                                    record.latitude !== null &&
-                                    record.latitude !== undefined
-                                    ? `Lat: ${
-                                        Number(
-                                            record.latitude
-                                        ).toFixed(6)
-                                    }`
-                                    : "Lat: N/A"
-                                }
+                                    </div>
 
-                                <br>
+                                    <span class="badge bg-primary">
+                                        #${record.id}
+                                    </span>
 
-                                ${
-                                    record.longitude !== null &&
-                                    record.longitude !== undefined
-                                    ? `Long: ${
-                                        Number(
-                                            record.longitude
-                                        ).toFixed(6)
-                                    }`
-                                    : "Long: N/A"
-                                }
+                                </div>
+
+
+                                <div class="row g-2 small">
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Country
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${escapeHtml(record.country)}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Region
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${escapeHtml(record.region)}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Category
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${escapeHtml(record.category)}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Quantity
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${record.quantity}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Sales
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${formatNumber(record.sales)}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Profit
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${formatNumber(record.profit)}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Discount
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${formatNumber(record.discount)}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-6">
+
+                                        <div class="text-muted">
+                                            Shipping Cost
+                                        </div>
+
+                                        <div class="record-value">
+                                            ${formatNumber(record.shipping_cost)}
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <hr>
+
+
+                                <div class="location small">
+
+                                    📍
+                                    ${escapeHtml(record.location_name)}
+
+                                    <br>
+
+                                    <span class="text-muted">
+
+                                        Latitude:
+                                        ${Number(record.latitude).toFixed(6)}
+
+                                        |
+
+                                        Longitude:
+                                        ${Number(record.longitude).toFixed(6)}
+
+                                    </span>
+
+                                </div>
+
+
+                                <div class="text-muted small mt-2">
+
+                                    Created:
+                                    ${formatDate(record.created_at)}
+
+                                </div>
 
                             </div>
 
-                        </td>
-
-                    `;
+                        `;
 
 
-                    recordsTableBody.appendChild(row);
+                        container.appendChild(
+                            card
+                        );
 
+                    }
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    error
+                );
+
+                loading.classList.add(
+                    "d-none"
+                );
+
+                errorMessage.textContent =
+                    error.message;
+
+                errorMessage.classList.remove(
+                    "d-none"
+                );
+
+            }
+
+        }
+
+
+        // ====================================================
+        // NUMBER FORMAT
+        // ====================================================
+
+        function formatNumber(value) {
+
+            return Number(
+                value || 0
+            ).toLocaleString(
+                "en-IN",
+                {
+                    maximumFractionDigits: 2
                 }
-            );
-
-
-            tableContainer.classList.remove(
-                "d-none"
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Records error:",
-                error
-            );
-
-
-            errorMessage.textContent =
-                error.message ||
-                "Unable to load records.";
-
-
-            errorMessage.classList.remove(
-                "d-none"
-            );
-
-
-        } finally {
-
-            loadingMessage.classList.add(
-                "d-none"
             );
 
         }
 
-    }
+
+        // ====================================================
+        // DATE FORMAT
+        // ====================================================
+
+        function formatDate(value) {
+
+            if (!value) {
+                return "-";
+            }
+
+            return new Date(
+                value
+            ).toLocaleString(
+                "en-IN"
+            );
+
+        }
 
 
-    refreshButton.addEventListener(
-        "click",
-        loadRecords
-    );
+        // ====================================================
+        // HTML ESCAPE
+        // ====================================================
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.textContent =
+                value ?? "";
+
+            return div.innerHTML;
+
+        }
 
 
-    loadRecords();
+        // ====================================================
+        // INITIAL LOAD
+        // ====================================================
 
-</script>
+        window.addEventListener(
+            "load",
+            loadRecords
+        );
 
+    </script>
 
 </body>
 

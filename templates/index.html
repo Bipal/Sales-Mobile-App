@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0d6efd"
+    >
 
     <title>Sales Mobile POC</title>
 
-    <meta name="theme-color" content="#0d6efd">
-    <meta name="description" content="Mobile Sales Data Collection POC">
-
+    <!-- Bootstrap CSS -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
-    <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" href="/static/icons/icon-192.png">
-
     <style>
         body {
-            background: #f5f7fb;
+            background-color: #f5f7fb;
         }
 
         .app-header {
@@ -28,106 +33,179 @@
         }
 
         .location-card {
-            background: #eef6ff;
-            border: 1px solid #cfe2ff;
+            border: none;
+            border-radius: 18px;
+        }
+
+        .sales-card {
+            border: none;
+            border-radius: 18px;
         }
 
         .location-text {
-            font-size: 0.9rem;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .small-note {
+            color: #6c757d;
+        }
+
+        .btn {
+            border-radius: 10px;
+        }
+
+        input {
+            border-radius: 10px !important;
+            padding: 12px !important;
         }
 
         .form-label {
             font-weight: 600;
         }
 
-        .submit-button {
-            min-height: 52px;
-            font-size: 1.05rem;
-            font-weight: 600;
-        }
-
-        .card {
+        .navigation-card {
             border: none;
-            border-radius: 16px;
-        }
-
-        .form-control {
-            min-height: 46px;
-            border-radius: 10px;
-        }
-
-        .small-note {
-            font-size: 0.78rem;
-            color: #6c757d;
+            border-radius: 18px;
         }
     </style>
 </head>
 
 <body>
 
-<header class="app-header shadow-sm">
-    <div class="container py-3">
-        <div class="d-flex justify-content-between align-items-center gap-3">
-            <div>
-                <h1 class="h4 mb-1">Sales Mobile POC</h1>
-                <div class="small opacity-75">
-                    Mobile Sales Data Collection
-                </div>
-            </div>
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <header class="app-header shadow-sm">
 
-      </div>
-    </div>
-</header>
+        <div class="container py-3">
 
-<main class="container py-4">
+            <div class="d-flex align-items-center">
 
-    <div class="card shadow-sm mb-3 location-card">
-        <div class="card-body">
-            <div class="d-flex align-items-start gap-2">
-                <div class="fs-5">📍</div>
+                <div>
+                    <h1 class="h4 mb-1">
+                        Sales Mobile POC
+                    </h1>
 
-                <div class="flex-grow-1">
-                    <div class="fw-bold">Current Location</div>
-
-                    <div id="locationName" class="location-text mt-1">
-                        Detecting your location...
-                    </div>
-
-                    <div id="coordinates" class="small-note mt-1">
-                        Latitude/Longitude: waiting for permission
+                    <div class="small opacity-75">
+                        Mobile Sales Data Collection
                     </div>
                 </div>
+
             </div>
+
         </div>
-    </div>
 
-    <div id="alertBox" class="alert d-none" role="alert"></div>
+    </header>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-4">
 
-            <h2 class="h5 mb-4">Enter Sales Information</h2>
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+    <main class="container py-4">
 
-            <form id="salesForm" novalidate>
+        <!-- =================================================
+             CURRENT LOCATION
+        ================================================== -->
+        <div class="card shadow-sm location-card mb-4">
 
-                <div class="row g-3">
+            <div class="card-body">
 
-                    <div class="col-12">
-                        <label for="customer_name" class="form-label">
+                <div class="d-flex align-items-start gap-3">
+
+                    <div class="fs-4">
+                        📍
+                    </div>
+
+                    <div class="flex-grow-1">
+
+                        <div class="fw-bold fs-5">
+                            Current Location
+                        </div>
+
+                        <div
+                            id="locationName"
+                            class="location-text mt-1"
+                        >
+                            Detecting your location...
+                        </div>
+
+                        <div
+                            id="coordinates"
+                            class="small-note mt-2"
+                        >
+                            Latitude/Longitude: detecting...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ALERT
+        ================================================== -->
+        <div
+            id="alertBox"
+            class="alert d-none"
+            role="alert"
+        ></div>
+
+
+        <!-- =================================================
+             SALES FORM
+        ================================================== -->
+        <div class="card shadow-sm sales-card mb-4">
+
+            <div class="card-body p-4">
+
+                <h2 class="h4 mb-4">
+                    Enter Sales Information
+                </h2>
+
+                <form
+                    id="salesForm"
+                    novalidate
+                >
+
+                    <!-- Customer Name -->
+                    <div class="mb-3">
+
+                        <label
+                            for="customer_name"
+                            class="form-label"
+                        >
                             Customer Name
                         </label>
+
                         <input
                             type="text"
                             class="form-control"
                             id="customer_name"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter customer name.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="country" class="form-label">
+
+                    <!-- Country -->
+                    <div class="mb-3">
+
+                        <label
+                            for="country"
+                            class="form-label"
+                        >
                             Country
                         </label>
+
                         <input
                             type="text"
                             class="form-control"
@@ -135,12 +213,24 @@
                             placeholder="e.g. India"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter country.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="region" class="form-label">
+
+                    <!-- Region -->
+                    <div class="mb-3">
+
+                        <label
+                            for="region"
+                            class="form-label"
+                        >
                             Region
                         </label>
+
                         <input
                             type="text"
                             class="form-control"
@@ -148,50 +238,98 @@
                             placeholder="e.g. South Asia"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter region.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="product" class="form-label">
+
+                    <!-- Product -->
+                    <div class="mb-3">
+
+                        <label
+                            for="product"
+                            class="form-label"
+                        >
                             Product
                         </label>
+
                         <input
                             type="text"
                             class="form-control"
                             id="product"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter product.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="category" class="form-label">
+
+                    <!-- Category -->
+                    <div class="mb-3">
+
+                        <label
+                            for="category"
+                            class="form-label"
+                        >
                             Category
                         </label>
+
                         <input
                             type="text"
                             class="form-control"
                             id="category"
+                            placeholder="e.g. Electronics"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter category.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label for="quantity" class="form-label">
+
+                    <!-- Quantity -->
+                    <div class="mb-3">
+
+                        <label
+                            for="quantity"
+                            class="form-label"
+                        >
                             Quantity
                         </label>
+
                         <input
                             type="number"
                             class="form-control"
                             id="quantity"
                             min="0"
-                            step="1"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter quantity.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label for="sales" class="form-label">
+
+                    <!-- Sales -->
+                    <div class="mb-3">
+
+                        <label
+                            for="sales"
+                            class="form-label"
+                        >
                             Sales
                         </label>
+
                         <input
                             type="number"
                             class="form-control"
@@ -200,12 +338,24 @@
                             step="0.01"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter sales amount.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label for="profit" class="form-label">
+
+                    <!-- Profit -->
+                    <div class="mb-3">
+
+                        <label
+                            for="profit"
+                            class="form-label"
+                        >
                             Profit
                         </label>
+
                         <input
                             type="number"
                             class="form-control"
@@ -213,12 +363,24 @@
                             step="0.01"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter profit.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="discount" class="form-label">
+
+                    <!-- Discount -->
+                    <div class="mb-3">
+
+                        <label
+                            for="discount"
+                            class="form-label"
+                        >
                             Discount
                         </label>
+
                         <input
                             type="number"
                             class="form-control"
@@ -227,12 +389,24 @@
                             step="0.01"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter discount.
+                        </div>
+
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label for="shipping_cost" class="form-label">
+
+                    <!-- Shipping Cost -->
+                    <div class="mb-4">
+
+                        <label
+                            for="shipping_cost"
+                            class="form-label"
+                        >
                             Shipping Cost
                         </label>
+
                         <input
                             type="number"
                             class="form-control"
@@ -241,33 +415,80 @@
                             step="0.01"
                             required
                         >
+
+                        <div class="invalid-feedback">
+                            Please enter shipping cost.
+                        </div>
+
                     </div>
 
-                </div>
 
-                <hr class="my-4">
+                    <!-- =================================================
+                         SUBMIT BUTTON
+                    ================================================== -->
+                    <div class="d-grid">
 
-                <div class="small-note mb-3">
-                    Location is captured automatically from the device.
-                    It cannot be manually edited.
-                </div>
+                        <button
+                            type="submit"
+                            id="submitButton"
+                            class="btn btn-primary btn-lg"
+                        >
+                            Submit Sales Data
+                        </button>
 
-                <button
-                    type="submit"
-                    id="submitButton"
-                    class="btn btn-primary w-100 submit-button"
-                >
-                    Submit Sales Data
-                </button>
+                    </div>
 
-            </form>
+                </form>
+
+            </div>
 
         </div>
-    </div>
 
-</main>
 
-<script src="/static/script.js"></script>
+        <!-- =================================================
+             NAVIGATION
+        ================================================== -->
+        <div class="card shadow-sm navigation-card">
+
+            <div class="card-body p-4">
+
+                <h3 class="h5 mb-3">
+                    Data & Analytics
+                </h3>
+
+                <div class="d-grid gap-2">
+
+                    <!-- View Records -->
+                    <a
+                        href="/records"
+                        class="btn btn-outline-primary btn-lg"
+                    >
+                        📋 View Records
+                    </a>
+
+
+                    <!-- View Dashboard -->
+                    <a
+                        href="/dashboard"
+                        class="btn btn-outline-success btn-lg"
+                    >
+                        📊 View Dashboard
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+    <script src="/static/script.js"></script>
 
 </body>
+
 </html>
