@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -140,6 +140,17 @@ with app.app_context():
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+
+@app.route("/service-worker.js")
+def service_worker():
+    """Serve the PWA service worker from the site root."""
+    return send_from_directory(
+        app.static_folder,
+        "service-worker.js",
+        mimetype="application/javascript",
+    )
 
 
 @app.route("/health")
