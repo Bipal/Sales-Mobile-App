@@ -78,6 +78,9 @@ with app.app_context():
 def home():
     return render_template("index.html")
 
+@app.route("/records")
+def records():
+    return render_template("records.html")
 
 @app.route("/health")
 def health():
