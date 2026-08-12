@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sales Records - Mobile POC</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        body {
+            background-color: #f5f7fa;
+        }
+
+        .page-header {
+            background: #0d6efd;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .records-card {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .location-cell {
+            min-width: 220px;
+        }
+
+        .coordinates {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .empty-message {
+            padding: 40px;
+            text-align: center;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container-fluid px-3 px-md-5 py-4">
+
+    <!-- HEADER -->
+
+    <div class="page-header mb-4">
+
+        <div
+            class="d-flex justify-content-between align-items-center flex-wrap"
+        >
+
+            <div>
+
+                <h2 class="mb-1">
+                    Sales Records
+                </h2>
+
+                <p class="mb-0">
+                    Mobile Sales POC - Database Records
+                </p>
+
+            </div>
+
+            <a
+                href="/"
+                class="btn btn-light mt-2 mt-md-0"
+            >
+                ← Back to Sales Form
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUMMARY -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Total Records
+                    </h6>
+
+                    <h2 id="recordCount">
+                        -
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECORDS -->
+
+    <div class="card shadow-sm records-card">
+
+        <div class="card-body">
+
+            <div
+                class="d-flex justify-content-between align-items-center mb-3"
+            >
+
+                <h5 class="mb-0">
+                    Sales Entries
+                </h5>
+
+                <button
+                    id="refreshButton"
+                    class="btn btn-primary"
+                >
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div id="loadingMessage">
+
+                <div class="text-center py-4">
+
+                    <div
+                        class="spinner-border text-primary"
+                        role="status"
+                    ></div>
+
+                    <p class="mt-2">
+                        Loading records...
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="errorMessage"
+                class="alert alert-danger d-none"
+            ></div>
+
+
+            <div
+                id="emptyMessage"
+                class="empty-message d-none"
+            >
+
+                <h5>
+                    No records found
+                </h5>
+
+                <p class="text-muted">
+                    Submit a sales record from the mobile form first.
+                </p>
+
+            </div>
+
+
+            <div
+                id="tableContainer"
+                class="table-container d-none"
+            >
+
+                <table
+                    class="table table-striped table-hover align-middle"
+                >
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Created</th>
+
+                            <th>Customer</th>
+
+                            <th>Country</th>
+
+                            <th>Region</th>
+
+                            <th>Product</th>
+
+                            <th>Category</th>
+
+                            <th>Quantity</th>
+
+                            <th>Sales</th>
+
+                            <th>Profit</th>
+
+                            <th>Discount</th>
+
+                            <th>Shipping Cost</th>
+
+                            <th class="location-cell">
+                                Location
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="recordsTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const loadingMessage =
+        document.getElementById("loadingMessage");
+
+    const errorMessage =
+        document.getElementById("errorMessage");
+
+    const emptyMessage =
+        document.getElementById("emptyMessage");
+
+    const tableContainer =
+        document.getElementById("tableContainer");
+
+    const recordsTableBody =
+        document.getElementById("recordsTableBody");
+
+    const recordCount =
+        document.getElementById("recordCount");
+
+    const refreshButton =
+        document.getElementById("refreshButton");
+
+
+    async function loadRecords() {
+
+        loadingMessage.classList.remove("d-none");
+
+        errorMessage.classList.add("d-none");
+
+        emptyMessage.classList.add("d-none");
+
+        tableContainer.classList.add("d-none");
+
+
+        try {
+
+            const response =
+                await fetch("/entries");
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    "Unable to load records."
+                );
+
+            }
+
+
+            recordCount.textContent =
+                data.count;
+
+
+            recordsTableBody.innerHTML = "";
+
+
+            if (
+                !data.entries ||
+                data.entries.length === 0
+            ) {
+
+                emptyMessage.classList.remove(
+                    "d-none"
+                );
+
+                return;
+
+            }
+
+
+            data.entries.forEach(
+                (record) => {
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    row.innerHTML = `
+
+                        <td>
+                            ${record.id ?? ""}
+                        </td>
+
+                        <td>
+                            ${
+                                record.created_at
+                                ? new Date(
+                                    record.created_at
+                                ).toLocaleString()
+                                : ""
+                            }
+                        </td>
+
+                        <td>
+                            ${record.customer_name ?? ""}
+                        </td>
+
+                        <td>
+                            ${record.country ?? ""}
+                        </td>
+
+                        <td>
+                            ${record.region ?? ""}
+                        </td>
+
+                        <td>
+                            ${record.product ?? ""}
+                        </td>
+
+                        <td>
+                            ${record.category ?? ""}
+                        </td>
+
+                        <td>
+                            ${record.quantity ?? ""}
+                        </td>
+
+                        <td>
+                            ₹${Number(
+                                record.sales || 0
+                            ).toLocaleString("en-IN")}
+                        </td>
+
+                        <td>
+                            ₹${Number(
+                                record.profit || 0
+                            ).toLocaleString("en-IN")}
+                        </td>
+
+                        <td>
+                            ${record.discount ?? 0}%
+                        </td>
+
+                        <td>
+                            ₹${Number(
+                                record.shipping_cost || 0
+                            ).toLocaleString("en-IN")}
+                        </td>
+
+                        <td class="location-cell">
+
+                            <strong>
+                                ${
+                                    record.location_name ||
+                                    "Unavailable"
+                                }
+                            </strong>
+
+                            <div class="coordinates">
+
+                                ${
+                                    record.latitude !== null &&
+                                    record.latitude !== undefined
+                                    ? `Lat: ${
+                                        Number(
+                                            record.latitude
+                                        ).toFixed(6)
+                                    }`
+                                    : "Lat: N/A"
+                                }
+
+                                <br>
+
+                                ${
+                                    record.longitude !== null &&
+                                    record.longitude !== undefined
+                                    ? `Long: ${
+                                        Number(
+                                            record.longitude
+                                        ).toFixed(6)
+                                    }`
+                                    : "Long: N/A"
+                                }
+
+                            </div>
+
+                        </td>
+
+                    `;
+
+
+                    recordsTableBody.appendChild(row);
+
+                }
+            );
+
+
+            tableContainer.classList.remove(
+                "d-none"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Records error:",
+                error
+            );
+
+
+            errorMessage.textContent =
+                error.message ||
+                "Unable to load records.";
+
+
+            errorMessage.classList.remove(
+                "d-none"
+            );
+
+
+        } finally {
+
+            loadingMessage.classList.add(
+                "d-none"
+            );
+
+        }
+
+    }
+
+
+    refreshButton.addEventListener(
+        "click",
+        loadRecords
+    );
+
+
+    loadRecords();
+
+</script>
+
+
+</body>
+
+</html>
