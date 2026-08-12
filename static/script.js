@@ -304,29 +304,13 @@ function formatDate(value) {
         return "—";
     }
 
-    // Database timestamps are stored in UTC.
-    // Add "Z" when the API returns a timestamp without
-    // an explicit timezone indicator.
-    let timestamp = value;
-
-    if (
-        typeof timestamp === "string" &&
-        !timestamp.endsWith("Z") &&
-        !timestamp.includes("+")
-    ) {
-        timestamp += "Z";
-    }
-
-    const date = new Date(timestamp);
+    const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
         return value;
     }
 
-    return date.toLocaleString(undefined, {
-        dateStyle: "short",
-        timeStyle: "medium"
-    });
+    return date.toLocaleString();
 }
 
 function formatNumber(value, decimals = 2) {

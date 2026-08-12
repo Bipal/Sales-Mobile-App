@@ -1,110 +1,69 @@
-const CACHE_NAME =
-    "sales-poc-v1";
+const CACHE_NAME = "sales-mobile-poc-v1";
 
-
-const APP_FILES = [
-
+const APP_SHELL = [
     "/",
-
-    "/static/script.js",
-
     "/static/manifest.json",
-
     "/static/icons/icon-192.png",
-
-    "/static/icons/icon-512.png"
-
+    "/static/icons/icon-512.png",
+    "/static/icons/apple-touch-icon.png"
 ];
 
+self.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => cache.addAll(APP_SHELL))
+            .then(() => self.skipWaiting())
+    );
+});
 
-self.addEventListener(
-    "install",
-
-    function (event) {
-
-        event.waitUntil(
-
-            caches
-                .open(CACHE_NAME)
-                .then(
-
-                    function (cache) {
-
-                        return cache.addAll(
-                            APP_FILES
-                        );
-
-                    }
-
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then((keys) =>
+                Promise.all(
+                    keys
+                        .filter((key) => key !== CACHE_NAME)
+                        .map((key) => caches.delete(key))
                 )
+            )
+            .then(() => self.clients.claim())
+    );
+});
 
-        );
+self.addEventListener("fetch", (event) => {
+    const request = event.request;
+    const url = new URL(request.url);
 
+    if (request.method !== "GET") {
+        return;
     }
 
-);
-
-
-self.addEventListener(
-    "activate",
-
-    function (event) {
-
-        event.waitUntil(
-
-            caches.keys()
-                .then(
-
-                    function (keys) {
-
-                        return Promise.all(
-
-                            keys
-                                .filter(
-                                    key =>
-                                    key !== CACHE_NAME
-                                )
-
-                                .map(
-                                    key =>
-                                    caches.delete(key)
-                                )
-
-                        );
-
-                    }
-
-                )
-
-        );
-
+    // Do not cache live database/API responses.
+    if (
+        url.pathname.startsWith("/submit") ||
+        url.pathname.startsWith("/entries") ||
+        url.pathname.startsWith("/dashboard-data") ||
+        url.pathname.startsWith("/reverse-geocode") ||
+        url.pathname.startsWith("/health")
+    ) {
+        return;
     }
 
-);
-
-
-self.addEventListener(
-    "fetch",
-
-    function (event) {
-
+    if (url.origin === self.location.origin) {
         event.respondWith(
-
-            fetch(event.request)
-                .catch(
-
-                    function () {
-
-                        return caches.match(
-                            event.request
-                        );
-
-                    }
-
+            fetch(request)
+                .then((response) => {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(request, copy);
+                    });
+                    return response;
+                })
+                .catch(() =>
+                    caches.match(request).then(
+                        (cached) => cached || caches.match("/")
+                    )
                 )
-
         );
-
     }
-
-);
+});
